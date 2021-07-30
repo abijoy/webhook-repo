@@ -1,0 +1,72 @@
+
+
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webhook Assignment</title>
+
+
+    <style>
+        section {
+            margin-left: 10%;
+            margin-right: 10%;
+            margin-top: 5%;
+            padding-top: 10px;
+            /* background-color: rgb(243, 163, 14); */
+            height: 100%;
+        }
+        .item {
+            text-align: left;
+            background-color: palegoldenrod;
+            padding: 10px;
+            border: 1px solid gray;
+        }
+    </style>
+</head>
+<body>
+    <!-- {{ tasks }} -->
+    <section style="text-align: center;">
+        <div class="content" id="content-holder">
+            <div id="item">
+                <!-- <p>Travis pushed to Dev on 23 Feb at 9:00 UTC</p> -->
+            </div>
+        </div>
+    </section>
+
+    <script>
+        
+        function httpGetAsync(theUrl, callback) {
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.onreadystatechange = function() { 
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+                callback(xmlHttp.responseText);
+            }
+            xmlHttp.open("GET", theUrl, true); // true for asynchronous 
+            xmlHttp.send(null);
+        }
+
+        httpGetAsync("http://127.0.0.1:5000/webhook/get/update", (data)=> {
+
+            let values = JSON.parse(data)
+            console.log(values)
+            // let item = document.getElementById("content-holder")
+            let section = document.getElementById('content-holder')
+            for(let i = 0; i<values.length; i++) {
+                val = values[i]
+                // console.log(val)
+                let item = document.createElement('div')
+                item.classList.add('item')
+                let datetime = new Date(val['timestamp']['$date']).toUTCString()
+                item.innerHTML = "<i>" + val['author'] + "</i> "  + val['action'] + " from " + "<b>" + val['from_branch'] + "</b>" + " to " + "<b>" + val['to_branch'] + "</b>" + " on " + datetime
+                section.appendChild(item) 
+                // console.log(item)
+                // console.log(values[0]['author'])
+            }
+
+        })
+    </script>
+</body>
+</html>
