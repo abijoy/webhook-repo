@@ -15,7 +15,7 @@ webhook = Blueprint('Webhook', __name__, url_prefix='/webhook')
 
 tasks = db.tasks 
 cache_tasks = {}
-cursor = tasks.find().sort('timestamp', pymongo.DESCENDING)
+cursor = tasks.find().sort('timestamp', pymongo.ASCENDING)
 list_cur = list(cursor)
 cache_tasks['task'] = list_cur
 # mongo = extensions.mongo
@@ -39,7 +39,7 @@ def datetime_utc_convert(dateTime: str):
 
 @webhook.route('/get/update')
 def get_update():
-    cursor = tasks.find().sort('timestamp', pymongo.DESCENDING)
+    cursor = tasks.find().sort('timestamp', pymongo.ASCENDING)
     list_cur = list(cursor)
     if cache_tasks.get('task'):
         print("CACHED!!!")
@@ -70,7 +70,8 @@ def get_update():
 
 @webhook.route('/')
 def api_root():
-    return render_template('webhook.html', tasks=list_cur)
+    total = len(cache_tasks['task'])
+    return render_template('webhook.html', tasks=dumps(cache_tasks['task']), total=total)
 
 @webhook.route('/receiver', methods=["POST"])
 def receiver():

@@ -21,9 +21,16 @@
         .item {
             margin-bottom: 10px;
             text-align: left;
-            background-color: palegoldenrod;
             padding: 10px;
             border: 1px solid gray;
+        }
+        .item-bg {
+            background-color: palegoldenrod; 
+    
+            transition: background-color 2s linear; 
+            -moz-transition: background-color 2s linear;  
+            -webkit-transition: background-color 2s linear; 
+            -ms-transition: background-color 2s linear; 
         }
     </style>
 </head>
@@ -31,18 +38,47 @@
     <!-- {{ tasks }} -->
     <section style="text-align: center;">
         <div class="content" id="content-holder">
-            {% for task in tasks %}
-                <div class="item">
-                    <!-- <p>Travis pushed to Dev on 23 Feb at 9:00 UTC</p> -->
-                    <i>{{task['author']}} </i> {{task['action']}} from {{task['from_branch']}} to {{task['to_branch']}} 
-                    on - {{task['timestamp']}}
-                </div>
-            {%endfor%}
 
         </div>
     </section>
 
     <script>
+
+        function formatAMPM(datetime) {
+            let date = datetime.toDateString()
+            let hours = datetime.getHours() - 6;
+            let minutes = datetime.getMinutes();
+            let ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+            minutes = minutes < 10 ? '0'+minutes : minutes;
+            let strTime = `<i>${date} - ${hours} : ${minutes} ${ampm} UTC </i>`
+            return strTime;
+        }
+
+        function build_dom(data) {
+            console.log(data)
+            let values = data
+            console.log(values)
+            // let item = document.getElementById("content-holder")
+            let section = document.getElementById('content-holder')
+            for(let i = 0; i<values.length; i++) {
+                val = values[i]
+                console.log(val)
+                let item = document.createElement('div')
+                item.classList.add('item')
+                // item.classList.add('item-bg')
+                
+                // let datetime = new Date(val['timestamp']['$date']).toUTCString()
+                
+                let datetime = formatAMPM(new Date(val['timestamp']['$date']))
+                item.innerHTML = "<i>" + val['author'] + "</i> "  + val['action'] + " from " + "<b>" + val['from_branch'] + "</b>" + " to " + "<b>" + val['to_branch'] + "</b>" + " on " + datetime
+                section.prepend(item)
+                
+                // console.log(item)
+                // console.log(values[0]['author'])
+            }
+        }
 
         function callback(data) {
             let values = JSON.parse(data)
@@ -54,9 +90,16 @@
                 console.log(val)
                 let item = document.createElement('div')
                 item.classList.add('item')
-                let datetime = new Date(val['timestamp']['$date']).toUTCString()
+                item.classList.add('item-bg')
+                
+                let datetime = formatAMPM(new Date(val['timestamp']['$date']))
                 item.innerHTML = "<i>" + val['author'] + "</i> "  + val['action'] + " from " + "<b>" + val['from_branch'] + "</b>" + " to " + "<b>" + val['to_branch'] + "</b>" + " on " + datetime
-                section.prepend(item) 
+                section.prepend(item)
+                
+                setTimeout(function() {
+                    item.style.background = "transparent"
+                }, 3000)
+                
                 // console.log(item)
                 // console.log(values[0]['author'])
             }
@@ -68,16 +111,17 @@
             if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
                 callback(xmlHttp.responseText);
             }
-            xmlHttp.open("GET", theUrl, false); // true for asynchronous 
+            xmlHttp.open("GET", theUrl, true); // true for asynchronous 
             xmlHttp.send(null);
         }
 
         let getData = () => {
             setInterval(() => {
                 httpGetAsync("http://127.0.0.1:5000/webhook/get/update", callback)
-            }, 30000)
+            }, 15000)
         }
         window.onload = (e) => {
+            build_dom({{tasks | safe}})
             getData()
         }
         // getData()
